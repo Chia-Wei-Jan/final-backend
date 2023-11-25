@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites disabled="0" errors="0" failures="0" tests="8" time="2.571">
+ <testsuite name="Article Tests" timestamp="2023-11-12T11:06:10" hostname="localhost" time="1.833" errors="0" tests="3" skipped="0" disabled="0" failures="0">
+  <testcase classname="Article Tests" name="GET /articles should retrieve all articles for the logged-in user" time="1.067" />
+  <testcase classname="Article Tests" name="GET /articles/:id should retrieve a single article by id" time="0.359" />
+  <testcase classname="Article Tests" name="POST /article should create a new article" time="0.405" />
+ </testsuite>
+ <testsuite name="Auth Tests" timestamp="2023-11-12T11:06:12" hostname="localhost" time="0.017" errors="0" tests="3" skipped="0" disabled="0" failures="0">
+  <testcase classname="Auth Tests" name="POST /register should register a new user" time="0.007" />
+  <testcase classname="Auth Tests" name="POST /login should log in a user" time="0.003" />
+  <testcase classname="Auth Tests" name="PUT /logout should log out a user" time="0.007" />
+ </testsuite>
+ <testsuite name="Profile Tests" timestamp="2023-11-12T11:06:12" hostname="localhost" time="0.721" errors="0" tests="2" skipped="0" disabled="0" failures="0">
+  <testcase classname="Profile Tests" name="GET /headline should retrieve the headline for the logged-in user" time="0.36" />
+  <testcase classname="Profile Tests" name="PUT /headline should update the headline for the logged-in user" time="0.361" />
+ </testsuite>
+</testsuites>
