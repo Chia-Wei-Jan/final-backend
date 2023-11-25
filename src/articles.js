@@ -8,24 +8,41 @@ const { isLoggedIn } = require('./auth');
 // GET /articles/:id  (where id is a valid or invalid article id)
 async function getArticlesOrArticle(req, res) {
     const { id } = req.params;
-    
-    try {
-        if(id) {
-            // Fetch a article by ID
-            const article = await Article.findById(id);
 
-            if(!article) {
-                return res.status(404).send({ error: 'Article not found' });
+    // Check if 'id' is a valid ObjectId
+    if (id && mongoose.isValidObjectId(id)) {
+        try {
+            const article = await Article.findById(id);
+            if (article) {
+                return res.status(200).json(article);
             }
-            res.status(200).json(article);
-        }
-        else {
-            // Fetch all articles for the logged in user
-            const articles = await Article.find({ author: req.username });
-            res.status(200).json(articles);
+        } catch (error) {
+            console.error(error);
+            return res.status(500).send({ error: 'Internal server error' });
         }
     }
-    catch (error) {
+
+    // If 'id' is not a valid ObjectId, or no article was found, try fetching by username
+    if (id) {
+        try {
+            const articlesByUsername = await Article.find({ author: id });
+            if (articlesByUsername.length > 0) {
+                return res.status(200).json(articlesByUsername);
+            }
+        } catch (error) {
+            console.error(error);
+            return res.status(500).send({ error: 'Internal server error' });
+        }
+    }
+
+    // If no 'id' is provided, fetch all articles for the logged-in user
+    try {
+        console.log(req.username);
+        const articles = await Article.find({ author: req.username });
+        console.log(articles);
+        res.status(200).json(articles);
+    } catch (error) {
+        console.error(error);
         res.status(500).send({ error: 'Internal server error' });
     }
 }
@@ -83,8 +100,7 @@ async function createArticle(req, res) {
         });
         await article.save();
 
-        const articles = await Article.find({});
-        console.log(articles)
+        const articles = await Article.find({author: req.username});
         res.status(201).json({ articles });
     }
     catch (error) {
