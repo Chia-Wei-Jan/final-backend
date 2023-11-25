@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const Article = require('./articleSchema');
+const User = require('./userSchema');
 const { isLoggedIn } = require('./auth');
 
 
@@ -37,9 +38,20 @@ async function getArticlesOrArticle(req, res) {
 
     // If no 'id' is provided, fetch all articles for the logged-in user
     try {
-        console.log(req.username);
-        const articles = await Article.find({ author: req.username });
-        console.log(articles);
+        // First, get the username array from the following ObjectIds
+        const followingUsernames = await User.find({
+            '_id': { $in: req.following }
+        }).select('username -_id'); // Select only the 'username' field, exclude '_id'
+
+        // Map the returned documents to an array of usernames
+        const followingUsernameArray = followingUsernames.map(user => user.username);
+
+        // Combine the logged-in user's username with their following's usernames
+        const authorsToQuery = [req.username, ...followingUsernameArray];
+
+        // Fetch articles written by any of these authors
+        const articles = await Article.find({ author: { $in: authorsToQuery } })
+                                      .sort({ date: -1 });
         res.status(200).json(articles);
     } catch (error) {
         console.error(error);

@@ -9,7 +9,7 @@ const SECRET_KEY = "myHardcodedSecret";
 
 let userObjs = {};
 
-function isLoggedIn(req, res, next) {
+async function isLoggedIn(req, res, next) {
     const sid = req.cookies[cookieKey];
 
     // no sid for cookie key
@@ -20,12 +20,26 @@ function isLoggedIn(req, res, next) {
     let username = sessionUser[sid];
 
     // no username mapped to sid
-    if (username) {
-        req.username = username;
-        next();
-    }
-    else {
+    if (!username) {
         return res.status(401).send({ error: 'Invalid session' });
+    }
+
+    try {
+        // Fetch the user by username
+        const user = await User.findOne({ username }).exec();
+
+        if (!user) {
+            return res.status(401).send({ error: 'User not found' });
+        }
+
+        // Add username and following list to the request object
+        req.username = username;
+        req.following = user.following;
+
+        next();
+    } catch (error) {
+        console.error('Error in isLoggedIn:', error);
+        res.status(500).send({ error: 'Internal server error' });
     }
 }
 
