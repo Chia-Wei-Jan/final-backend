@@ -65,38 +65,45 @@ async function updateArticle(req, res) {
 
     try {
         const article = await Article.findById(id);
-
-        if(!article) {
+        if (!article) {
             return res.status(404).send({ error: 'Article not found' });
         }
 
-        if(article.author !== req.username) {
-            return res.status(403).send({ error: 'Forbidden' });
-        }
-
-        if(commentId === undefined) {
+        // Update article text if no commentId is provided (and the user is the author)
+        if (commentId === undefined) {
             article.text = text;
-        }
-        else {
-            const comment = article.comments.id(commentId);
-
-            if(comment) {
-                comment.text = text;
+            if (article.author !== req.username) {
+                return res.status(403).send({ error: 'Forbidden' });
             }
-            else if(commentId === '-1') {
-                article.comments.push({ text });
-            }
-            else {
-                return res.status(404).send({ error: 'Comment not found' });
+        } else {
+            // Handle comment addition or update
+            if (commentId === '-1') {
+                // Add a new comment
+                article.comments.push({ 
+                    author: req.username, 
+                    text: text 
+                });
+            } else {
+                // Update an existing comment
+                const comment = article.comments.id(commentId);
+                if (comment) {
+                    if (comment.author !== req.username) {
+                        return res.status(403).send({ error: 'Forbidden' });
+                    }
+                    comment.text = text;
+                } else {
+                    return res.status(404).send({ error: 'Comment not found' });
+                }
             }
         }
         await article.save();
         res.status(200).json({ articles: [article] });
-    }
-    catch (error) {
+    } catch (error) {
+        console.error(error);
         res.status(500).send({ error: 'Internal server error' });
     }
 }
+
 
 
 async function createArticle(req, res) {
