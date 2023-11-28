@@ -2,6 +2,8 @@ const express = require('express');
 const mongoose = require('mongoose');
 const Profile = require('./profileSchema');
 const { isLoggedIn } = require('./auth'); 
+// const { uploadImage } = require('./uploadCloudinary');
+const uploadimg = require("./uploadCloudinary");
 
 async function getHeadline(req, res) {
     const username = req.params.user || req.username;;
@@ -129,41 +131,80 @@ async function getDob(req, res) {
 }
 
 
+// async function getAvatar(req, res) {
+//     const username = req.params.user || req.username;;
+
+//     try {
+//         const profile = await Profile.findOne({username: username}, 'avatar');
+//         if(!profile) {
+//             return res.status(404).send({ error: 'User not found'});
+//         }
+//         res.status(200).send({ username, avatar: profile.avatar});
+//     }
+//     catch (error) {
+//         res.status(500).send({error: 'Internal server error'});
+//     }
+// }
+
+// async function putAvatar(req, res) {
+//     const username = req.username;   // Retrieved from isLoggedIn middleware
+//     const avatarUrl = req.fileurl;   // URL from Cloudinary upload
+
+//     if (!avatarUrl) {
+//         return res.status(400).send({ error: 'No image uploaded' });
+//     }
+
+//     try {
+//         const profile = await Profile.findOneAndUpdate(
+//             { username: username },
+//             { $set: { avatar: avatarUrl }},
+//             { new: true }
+//         );
+
+//         if (!profile) {
+//             return res.status(404).send({ error: 'Profile not found' });
+//         }
+//         res.status(200).send({ username, avatar: profile.avatar });
+//     } 
+//     catch (error) {
+//         res.status(500).send({ error: 'Internal server error' });
+//     }
+// }
+
+
+
 async function getAvatar(req, res) {
-    const username = req.params.user || req.username;;
-
-    try {
-        const profile = await Profile.findOne({username: username}, 'avatar');
-        if(!profile) {
-            return res.status(404).send({ error: 'User not found'});
-        }
-        res.status(200).send({ username, avatar: profile.avatar});
-    }
-    catch (error) {
-        res.status(500).send({error: 'Internal server error'});
-    }
-}
-
-async function putAvatar(req, res) {
-    const username = req.username;   // Retrieved from isLoggedIn middleware
-    const { avatar: newAvatar } = req.body;
-
-    try {
-        const profile = await Profile.findOneAndUpdate(
-            { username: username },
-            { $set: { avatar: newAvatar }},
-            { new: true }
-        );
-
-        if(!profile) {
-            return res.status(404).send({ error: 'Profile not found' });
-        }
-        return res.status(200).send({ username, avatar: profile.avatar });
-    }
-    catch (error) {
-        res.status(500).send({error: 'Internal server error'});
+    const username  = req.params.user || req.username;
+    if (!username) {
+      res.status(400).send("Please include username");
+    } else {
+      const profile = await Profile.findOne({ username: username });
+      if (!profile) {
+        res.status(400).send("User not found");
+      } else {
+        res.status(200).send({ username: username, avatar: profile.avatar });
+      }
     }
 }
+
+async function setAvatar(req, res) {
+    const username = req.username;
+    const newAvatarUrl = req.fileurl;
+  
+    const newAvatarUrlHttps = "https" + newAvatarUrl.substring(4);
+  
+    if (!newAvatarUrlHttps) {
+      res.status(400).send("Please include cloudinary url you want to update");
+      return;
+    }
+    const profile = await Profile.findOne({ username: username });
+    profile.avatar = newAvatarUrlHttps;
+    await profile.save();
+    res.status(200).send({ username: username, avatar: newAvatarUrlHttps });
+}
+
+
+
 
 async function getPhone(req, res) {
     const username = req.params.user || req.username;;
@@ -211,8 +252,10 @@ module.exports = (app) => {
     app.get('/zipcode/:user?', isLoggedIn, getZipcode);
     app.put('/zipcode', isLoggedIn, putZipcode);
     app.get('/dob/:user?', isLoggedIn, getDob);
-    app.get('/avatar/:user?', isLoggedIn, getAvatar);
-    app.put('/avatar', isLoggedIn, putAvatar);
+    // app.get('/avatar/:user?', isLoggedIn, getAvatar);
+    // app.put('/avatar', isLoggedIn, uploadImage('avatar'), putAvatar);
+    app.get("/avatar/:user?", isLoggedIn, getAvatar);
+    app.put("/avatar", isLoggedIn, uploadimg.uploadImage("publicId"), setAvatar);
     app.get('/phone/:user?', isLoggedIn, getPhone);
     app.put('/phone', isLoggedIn, putPhone);
 };
