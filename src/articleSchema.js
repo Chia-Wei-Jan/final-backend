@@ -10,6 +10,7 @@ const articleSchema = new mongoose.Schema({
     author: String,
     title: String,
     text: String,
+    image: String,
     date: { type: Date, default: Date.now },
     comments: [commentSchema]
 });

@@ -2,7 +2,6 @@ const express = require('express');
 const mongoose = require('mongoose');
 const Profile = require('./profileSchema');
 const { isLoggedIn } = require('./auth'); 
-// const { uploadImage } = require('./uploadCloudinary');
 const uploadimg = require("./uploadCloudinary");
 
 async function getHeadline(req, res) {
@@ -131,48 +130,6 @@ async function getDob(req, res) {
 }
 
 
-// async function getAvatar(req, res) {
-//     const username = req.params.user || req.username;;
-
-//     try {
-//         const profile = await Profile.findOne({username: username}, 'avatar');
-//         if(!profile) {
-//             return res.status(404).send({ error: 'User not found'});
-//         }
-//         res.status(200).send({ username, avatar: profile.avatar});
-//     }
-//     catch (error) {
-//         res.status(500).send({error: 'Internal server error'});
-//     }
-// }
-
-// async function putAvatar(req, res) {
-//     const username = req.username;   // Retrieved from isLoggedIn middleware
-//     const avatarUrl = req.fileurl;   // URL from Cloudinary upload
-
-//     if (!avatarUrl) {
-//         return res.status(400).send({ error: 'No image uploaded' });
-//     }
-
-//     try {
-//         const profile = await Profile.findOneAndUpdate(
-//             { username: username },
-//             { $set: { avatar: avatarUrl }},
-//             { new: true }
-//         );
-
-//         if (!profile) {
-//             return res.status(404).send({ error: 'Profile not found' });
-//         }
-//         res.status(200).send({ username, avatar: profile.avatar });
-//     } 
-//     catch (error) {
-//         res.status(500).send({ error: 'Internal server error' });
-//     }
-// }
-
-
-
 async function getAvatar(req, res) {
     const username  = req.params.user || req.username;
     if (!username) {
@@ -202,8 +159,6 @@ async function setAvatar(req, res) {
     await profile.save();
     res.status(200).send({ username: username, avatar: newAvatarUrlHttps });
 }
-
-
 
 
 async function getPhone(req, res) {
@@ -252,8 +207,6 @@ module.exports = (app) => {
     app.get('/zipcode/:user?', isLoggedIn, getZipcode);
     app.put('/zipcode', isLoggedIn, putZipcode);
     app.get('/dob/:user?', isLoggedIn, getDob);
-    // app.get('/avatar/:user?', isLoggedIn, getAvatar);
-    // app.put('/avatar', isLoggedIn, uploadImage('avatar'), putAvatar);
     app.get("/avatar/:user?", isLoggedIn, getAvatar);
     app.put("/avatar", isLoggedIn, uploadimg.uploadImage("publicId"), setAvatar);
     app.get('/phone/:user?', isLoggedIn, getPhone);
