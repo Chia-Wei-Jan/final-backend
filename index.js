@@ -3,7 +3,8 @@ const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const mongoose = require('mongoose');
 const cors = require('cors');
-
+const session = require('express-session');
+const passport = require('passport');
 const auth = require('./src/auth');
 const profile = require('./src/profile');
 const article = require('./src/articles');
@@ -36,8 +37,26 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
+app.use(session({
+  secret: 'doNotGuessTheSecret',
+  resave: true,
+  saveUninitialized: true
+}));
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+passport.serializeUser(function(user, done) {
+  done(null, user);
+});
+
+passport.deserializeUser(function(user, done) {
+  done(null, user);
+});
+
 app.get('/', hello);
 auth.initialize(app); 
+auth.initializeGoogleAuth(app);
 profile(app);
 article(app);
 following(app);

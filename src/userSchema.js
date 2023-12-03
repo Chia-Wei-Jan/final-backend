@@ -3,25 +3,25 @@ const mongoose = require('mongoose');
 const userSchema = new mongoose.Schema({
   username: {
     type: String,
-    required: [true, 'Username is required'],
+    required: [false, 'Username is required'],
     unique: true
   },
   email: {
     type: String,
-    required: [true, 'Email is required'],
+    required: [false, 'Email is required'],
     unique: true
   },
   dob: {
     type: Date,
-    required: [true, 'Date of Birth is required']
+    required: [false, 'Date of Birth is required']
   },
   phone: {
     type: String,
-    required: [true, 'Phone number is required']
+    required: [false, 'Phone number is required']
   },
   zipcode: {
     type: String,
-    required: [true, 'Zipcode is required']
+    required: [false, 'Zipcode is required']
   },
   hash: String,
   salt: String,
@@ -33,6 +33,8 @@ const userSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'    // References the UserSchema
   }],
+  googleId: String,
+  authType: String
 })
 
 

@@ -1,5 +1,7 @@
 const md5 = require('md5'); // If you're using the 'md5' package
 const mongoose = require('mongoose');
+const passport = require('passport');
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const User = require('./userSchema');
 const Profile = require('./profileSchema');
 let sessionUser = {};
@@ -159,10 +161,48 @@ async function changePassword(req, res) {
       console.error(error);
       res.status(500).send({ error: 'Internal server error' });
     }
+}
+
+passport.use(new GoogleStrategy({
+    clientID: '930081156832-va0vtlqfsjbq1be7j8jpagnl7pl0798v.apps.googleusercontent.com',
+    clientSecret: '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',
+    callbackURL: "http://localhost:3000/auth/google/callback"
+  },
+  async function(accessToken, refreshToken, profile, done) {
+      const googleId = profile.id;
+      let user = await User.findOne({ googleId });
+
+      if (!user) {
+          user = new User({
+            username: profile.displayName,
+            googleId: googleId,
+            authType: 'google',
+            email: profile.emails ? profile.emails[0].value : undefined,
+          });
+          await user.save();
+      }
+
+      done(null, user);
   }
+));
+
+// Google OAuth2 Routes
+function initializeGoogleAuth(app) {
+    app.get('/auth/google',
+        passport.authenticate('google', { scope: ['profile', 'email'] }));
+
+    app.get('/auth/google/callback', 
+        passport.authenticate('google', { failureRedirect: 'http://localhost:4200/login' }),
+        function(req, res) { 
+            // Successful authentication, redirect home or another page.
+            const username = req.user.username;
+
+            res.redirect('http://localhost:4200/main?username=${req.user.username}');
+        });
+}
 
 
-// module.exports.isLoggedIn = isLoggedIn;
+
 
 exports.isLoggedIn = isLoggedIn;
 
@@ -174,3 +214,4 @@ exports.initialize = (app) => {
 };
 
 exports.sessionUser = sessionUser;
+exports.initializeGoogleAuth = initializeGoogleAuth;
