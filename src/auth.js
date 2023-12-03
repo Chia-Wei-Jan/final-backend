@@ -13,14 +13,15 @@ let userObjs = {};
 
 async function isLoggedIn(req, res, next) {
     const sid = req.cookies[cookieKey];
-
+    console.log(req.cookies);
+    console.log(sid);
     // no sid for cookie key
     if (!sid) {
         return res.status(401).send({ error: 'You are not logged in' });
     }
 
     let username = sessionUser[sid];
-
+    console.log(username);
     // no username mapped to sid
     if (!username) {
         return res.status(401).send({ error: 'Invalid session' });
@@ -65,7 +66,7 @@ async function login(req, res) {
             const sessionKey = md5(SECRET_KEY + new Date().getTime() + user.username);
             sessionUser[sessionKey] = user.username; 
 
-            res.cookie(cookieKey, sessionKey, { maxAge: 3600 * 1000, httpOnly: true, sameSite: 'Lax' });
+            res.cookie(cookieKey, sessionKey, { maxAge: 3600 * 1000, httpOnly: true, secure: true, sameSite: 'None' });
 
             res.status(200).send({ username: user.username, result: 'success' });
         } else {
@@ -120,7 +121,7 @@ async function register(req, res) {
         const sessionKey = md5(SECRET_KEY + new Date().getTime() + user.username);
         sessionUser[sessionKey] = user.username; 
 
-        res.cookie(cookieKey, sessionKey, { maxAge: 3600 * 1000, httpOnly: true, sameSite: 'Lax' });
+        res.cookie(cookieKey, sessionKey, { maxAge: 3600 * 1000, httpOnly: true, secure: true, sameSite: 'None' });
 
         res.status(200).send({ result: 'success', username: savedUser.username });
     } catch (error) {
@@ -166,7 +167,7 @@ async function changePassword(req, res) {
 passport.use(new GoogleStrategy({
     clientID: '930081156832-va0vtlqfsjbq1be7j8jpagnl7pl0798v.apps.googleusercontent.com',
     clientSecret: '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',
-    callbackURL: "http://localhost:3000/auth/google/callback"
+    callbackURL: "https://ricebookserver-cj35-3b5c4f5224a3.herokuapp.com/auth/google/callback"
   },
   async function(accessToken, refreshToken, profile, done) {
       const googleId = profile.id;
@@ -192,12 +193,11 @@ function initializeGoogleAuth(app) {
         passport.authenticate('google', { scope: ['profile', 'email'] }));
 
     app.get('/auth/google/callback', 
-        passport.authenticate('google', { failureRedirect: 'http://localhost:4200/login' }),
+        passport.authenticate('google', { failureRedirect: 'https://ricebook-cj35.surge.sh/login' }),
         function(req, res) { 
-            // Successful authentication, redirect home or another page.
             const username = req.user.username;
 
-            res.redirect('http://localhost:4200/main?username=${req.user.username}');
+            res.redirect('https://ricebook-cj35.surge.sh/main?username=${req.user.username}');
         });
 }
 
